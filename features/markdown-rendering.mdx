@@ -1,0 +1,228 @@
+---
+title: Markdown rendering
+description: Learn how MD Viewer renders GitHub-flavored markdown with beautiful typography and styling
+---
+
+MD Viewer uses `react-markdown` with `remark-gfm` to provide full GitHub-flavored markdown support, ensuring your documents look great with proper typography and syntax highlighting.
+
+## GitHub-flavored markdown support
+
+The application uses the `remark-gfm` plugin to extend standard markdown with GitHub's popular extensions:
+
+```jsx src/components/MarkdownRenderer.jsx
+<ReactMarkdown 
+  remarkPlugins={[remarkGfm]}
+  components={{
+    code({node, inline, className, children, ...props}) {
+      const match = /language-(\w+)/.exec(className || '');
+      if (!inline && match && match[1] === 'mermaid') {
+        return <Mermaid chart={String(children).replace(/\n$/, '')} />;
+      }
+      return <code className={className} {...props}>{children}</code>;
+    }
+  }}
+>
+  {content}
+</ReactMarkdown>
+```
+
+## Supported syntax
+
+MD Viewer supports all GitHub-flavored markdown features:
+
+<Tabs>
+  <Tab title="Tables">
+    Create tables with pipes and hyphens:
+
+    ```markdown
+    | Feature | Status |
+    |---------|--------|
+    | Tables  | ✓      |
+    | GFM     | ✓      |
+    ```
+
+    Tables are styled with alternating row colors and proper borders (see `index.css:377-399`).
+  </Tab>
+
+  <Tab title="Task lists">
+    Create interactive-looking task lists:
+
+    ```markdown
+    - [x] Completed task
+    - [ ] Pending task
+    - [ ] Another task
+    ```
+  </Tab>
+
+  <Tab title="Strikethrough">
+    Use double tildes for strikethrough text:
+
+    ```markdown
+    ~~This text is crossed out~~
+    ```
+  </Tab>
+
+  <Tab title="Autolinks">
+    URLs are automatically converted to links:
+
+    ```markdown
+    Visit https://github.com for more info
+    ```
+  </Tab>
+</Tabs>
+
+## Typography and styling
+
+MD Viewer uses system fonts for a native macOS feel and provides dynamic font scaling.
+
+### System fonts
+
+The application uses the macOS system font stack:
+
+```css src/index.css
+--font-system: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, 
+               Helvetica, Arial, sans-serif, "Apple Color Emoji", 
+               "Segoe UI Emoji", "Segoe UI Symbol";
+--font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, 
+             "Liberation Mono", monospace;
+```
+
+### Dynamic font scaling
+
+Font size is controlled by a CSS variable that updates based on user preference:
+
+```css src/index.css
+.markdown-body {
+  font-size: calc(var(--md-base-size) * var(--md-scale));
+  line-height: 1.6;
+  transition: font-size 0.2s ease;
+}
+```
+
+<Info>
+The `--md-scale` variable is updated dynamically via the toolbar controls, ranging from 0.5 to 2.0 (50% to 200%).
+</Info>
+
+### Heading styles
+
+Headings are styled with proper hierarchy and visual separation:
+
+```css src/index.css
+.markdown-body h1 { 
+  font-size: 2em; 
+  border-bottom: 1px solid var(--border-color); 
+  padding-bottom: 0.3em; 
+  margin-top: 0; 
+}
+
+.markdown-body h2 { 
+  font-size: 1.5em; 
+  border-bottom: 1px solid var(--border-color); 
+  padding-bottom: 0.3em; 
+}
+
+.markdown-body h3 { font-size: 1.25em; }
+.markdown-body h4 { font-size: 1em; }
+```
+
+H1 and H2 headings include bottom borders for clear visual separation.
+
+## Code block rendering
+
+Code blocks are rendered with monospace fonts and styled backgrounds.
+
+### Inline code
+
+Inline code uses a subtle background:
+
+```css src/index.css
+.markdown-body code {
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+  background-color: rgba(0, 0, 0, 0.04);
+  padding: 0.2em 0.4em;
+  border-radius: var(--radius-sm);
+}
+```
+
+### Code fences
+
+Fenced code blocks have rounded corners and borders:
+
+```css src/index.css
+.markdown-body pre {
+  background-color: rgba(0, 0, 0, 0.03);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  overflow: auto;
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+  border: 1px solid var(--border-color);
+}
+```
+
+<Note>
+Code blocks adapt to dark mode automatically using CSS media queries. In dark mode, backgrounds use `rgba(255, 255, 255, 0.05)`.
+</Note>
+
+## Additional elements
+
+### Blockquotes
+
+Blockquotes are styled with a left border and muted text color:
+
+```css src/index.css
+.markdown-body blockquote {
+  padding: 0 1em;
+  color: var(--text-secondary);
+  border-left: 0.25em solid var(--border-color);
+}
+```
+
+### Images
+
+Images are displayed with rounded corners and subtle shadows:
+
+```css src/index.css
+.markdown-body img {
+  max-width: 100%;
+  border-radius: var(--radius-md);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  margin: var(--space-md) 0;
+}
+```
+
+### Links
+
+Links use the accent blue color and show underlines on hover:
+
+```css src/index.css
+.markdown-body a {
+  color: var(--accent-blue);
+  text-decoration: none;
+}
+
+.markdown-body a:hover {
+  text-decoration: underline;
+}
+```
+
+## Empty state
+
+When no file is selected, MD Viewer shows a helpful empty state:
+
+```jsx src/components/MarkdownRenderer.jsx
+if (!content) {
+  return (
+    <div className="empty-state">
+      <FileText size={48} className="empty-icon" />
+      <h2 style={{ marginBottom: '8px', color: 'var(--text-primary)' }}>
+        No file selected
+      </h2>
+      <p>Open a markdown file from the sidebar or click upload on the toolbar.</p>
+    </div>
+  );
+}
+```
+
+This ensures users always know what to do next when the viewer is empty.

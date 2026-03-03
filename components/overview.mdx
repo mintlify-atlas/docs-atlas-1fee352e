@@ -1,0 +1,75 @@
+---
+title: Components overview
+description: Understanding the architecture and component hierarchy of MD Viewer
+---
+
+MD Viewer is built with React and follows a clean component architecture. The application is composed of four main components that work together to create a seamless markdown viewing experience.
+
+## Architecture
+
+The application follows a single-page architecture with the main `App.jsx` component managing global state and coordinating between child components.
+
+```
+App.jsx
+├── Sidebar.jsx        (File management)
+├── Toolbar.jsx        (Controls and title)
+└── MarkdownRenderer.jsx
+    └── Mermaid.jsx    (Diagram rendering)
+```
+
+## Component hierarchy
+
+The `App` component serves as the root container and manages:
+- File state and active file selection
+- Sidebar visibility toggle
+- Font size scaling factor
+- Drag-and-drop file upload
+- LocalStorage persistence
+
+It passes state and callbacks down to three main child components:
+
+### Sidebar
+Handles file list display, file selection, and file management actions (upload, create new, remove).
+
+### Toolbar
+Displays the active file title and provides controls for sidebar toggle and font size adjustment.
+
+### MarkdownRenderer
+Renders markdown content using react-markdown with GitHub Flavored Markdown support. It delegates mermaid diagram rendering to the `Mermaid` component.
+
+## How components work together
+
+1. **File management flow**: User uploads or creates a file → Sidebar updates → App state changes → MarkdownRenderer receives new content
+
+2. **Font scaling**: User adjusts font size in Toolbar → App state updates → MarkdownRenderer applies new scale factor via CSS variable
+
+3. **Mermaid diagrams**: MarkdownRenderer detects mermaid code blocks → Mermaid component renders SVG diagram
+
+4. **Sidebar toggle**: User clicks toggle in Toolbar → App state updates → Sidebar visibility changes
+
+## State management
+
+The application uses React's built-in `useState` hooks for state management, with all state centralized in the `App` component. Key state includes:
+
+- `files`: Array of file objects with id, name, and content
+- `activeFileId`: Currently selected file ID
+- `isOpen`: Sidebar visibility
+- `fontSizeFactor`: Markdown scaling factor (0.5 to 2.0)
+- `isToolbarHidden`: Auto-hide state based on scroll
+
+## Component pages
+
+<CardGroup cols={2}>
+  <Card title="Markdown renderer" icon="file-lines" href="/components/markdown-renderer">
+    Core markdown rendering with GFM support
+  </Card>
+  <Card title="Sidebar" icon="sidebar" href="/components/sidebar">
+    File list and management interface
+  </Card>
+  <Card title="Toolbar" icon="bars" href="/components/toolbar">
+    Controls and title bar
+  </Card>
+  <Card title="Mermaid" icon="diagram-project" href="/components/mermaid">
+    Diagram rendering component
+  </Card>
+</CardGroup>

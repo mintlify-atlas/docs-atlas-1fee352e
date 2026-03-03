@@ -1,0 +1,149 @@
+---
+title: Toolbar
+description: Control bar with file title, sidebar toggle, and font size controls
+---
+
+The `Toolbar` component provides the main control interface, displaying the active file title and controls for toggling the sidebar and adjusting font size.
+
+## Props
+
+<ParamField path="toggleSidebar" type="function" required>
+  Callback function called when the sidebar toggle button is clicked.
+</ParamField>
+
+<ParamField path="title" type="string">
+  The title to display, typically the active file name. Defaults to "Untitled" if not provided.
+</ParamField>
+
+<ParamField path="fontSizeFactor" type="number" required>
+  Current font size scaling factor (0.5 to 2.0). Displayed as a percentage.
+</ParamField>
+
+<ParamField path="setFontSizeFactor" type="function" required>
+  Callback function to update the font size factor. Called with the new factor value.
+</ParamField>
+
+<ParamField path="isHidden" type="boolean">
+  Controls toolbar visibility. When true, the toolbar is hidden (typically on scroll).
+</ParamField>
+
+## Font size controls
+
+The toolbar provides increase and decrease buttons with constraints:
+
+```jsx
+const handleIncreaseFont = () => {
+  setFontSizeFactor(prev => Math.min(prev + 0.1, 2.0));
+};
+
+const handleDecreaseFont = () => {
+  setFontSizeFactor(prev => Math.max(prev - 0.1, 0.5));
+};
+```
+
+- **Minimum**: 0.5 (50%)
+- **Maximum**: 2.0 (200%)
+- **Step size**: 0.1 (10%)
+
+Buttons are disabled at their respective limits:
+
+```jsx
+<button 
+  className="btn-icon" 
+  onClick={handleDecreaseFont} 
+  title="Decrease Font Size" 
+  disabled={fontSizeFactor <= 0.5}
+>
+  <span style={{ fontSize: '13px', fontWeight: 600 }}>T</span>
+</button>
+
+<span style={{ 
+  fontSize: '0.8rem', 
+  color: 'var(--text-secondary)', 
+  width: '40px', 
+  textAlign: 'center' 
+}}>
+  {Math.round(fontSizeFactor * 100)}%
+</span>
+
+<button 
+  className="btn-icon" 
+  onClick={handleIncreaseFont} 
+  title="Increase Font Size" 
+  disabled={fontSizeFactor >= 2.0}
+>
+  <span style={{ fontSize: '17px', fontWeight: 600 }}>T</span>
+</button>
+```
+
+## Sidebar toggle
+
+The left side of the toolbar contains the sidebar toggle and file title:
+
+```jsx
+<div className="toolbar-group">
+  <button className="btn-icon" onClick={toggleSidebar} title="Toggle Sidebar">
+    <PanelLeft size={18} />
+  </button>
+  <FileText size={18} style={{ color: 'var(--text-secondary)', marginLeft: '8px' }} />
+  <span className="toolbar-title" style={{ marginLeft: '4px' }}>
+    {title || "Untitled"}
+  </span>
+</div>
+```
+
+## Auto-hide on scroll
+
+The toolbar can be hidden based on scroll behavior, controlled by the `isHidden` prop:
+
+```jsx
+<div className={`toolbar ${isHidden ? 'hidden' : ''}`}>
+  {/* toolbar content */}
+</div>
+```
+
+In the main App component, this is managed by tracking scroll direction:
+
+```jsx
+const handleScroll = useCallback((e) => {
+  const currentScrollY = e.target.scrollTop;
+  
+  if (currentScrollY > lastScrollY.current && currentScrollY > 60) {
+    setIsToolbarHidden(true);
+  } else if (currentScrollY < lastScrollY.current) {
+    setIsToolbarHidden(false);
+  }
+  
+  lastScrollY.current = currentScrollY;
+}, []);
+```
+
+The toolbar hides when scrolling down past 60 pixels and reappears when scrolling up.
+
+## Layout structure
+
+The toolbar is divided into two groups with space-between alignment:
+
+```jsx
+<div className={`toolbar ${isHidden ? 'hidden' : ''}`}>
+  <div className="toolbar-group">
+    {/* Sidebar toggle and title */}
+  </div>
+
+  <div className="toolbar-group">
+    {/* Font size controls */}
+  </div>
+</div>
+```
+
+## Usage example
+
+```jsx
+<Toolbar 
+  toggleSidebar={toggleSidebar}
+  title={activeName}
+  fontSizeFactor={fontSizeFactor}
+  setFontSizeFactor={setFontSizeFactor}
+  isHidden={isToolbarHidden}
+/>
+```

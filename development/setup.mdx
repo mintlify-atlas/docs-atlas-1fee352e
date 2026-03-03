@@ -1,0 +1,100 @@
+---
+title: Development setup
+description: Set up your local development environment for MD Viewer
+---
+
+This guide will help you set up MD Viewer for local development.
+
+## Prerequisites
+
+Before you begin, ensure you have the following installed:
+
+- **Node.js** (version 18 or higher recommended)
+- **npm** (comes with Node.js)
+
+## Getting started
+
+<Steps>
+  <Step title="Clone the repository">
+    Clone the MD Viewer repository to your local machine:
+
+    ```bash
+    git clone https://github.com/yourusername/md-viewer.git
+    cd md-viewer
+    ```
+  </Step>
+
+  <Step title="Install dependencies">
+    Install all required dependencies using npm:
+
+    ```bash
+    npm install
+    ```
+
+    This will install all dependencies listed in `package.json`, including:
+    - React 19 and React DOM
+    - Vite for build tooling
+    - react-markdown and remark-gfm for markdown rendering
+    - Mermaid for diagram support
+    - lucide-react for icons
+  </Step>
+
+  <Step title="Start the development server">
+    Run the development server with hot module replacement (HMR):
+
+    ```bash
+    npm run dev
+    ```
+
+    The application will be available at `http://localhost:5173` by default. The page will automatically reload when you make changes to the source code.
+  </Step>
+</Steps>
+
+## Available scripts
+
+MD Viewer includes several npm scripts for development and production:
+
+<CodeGroup>
+```bash Development
+npm run dev
+```
+
+```bash Build
+npm run build
+```
+
+```bash Preview
+npm run preview
+```
+
+```bash Lint
+npm run lint
+```
+</CodeGroup>
+
+### Script details
+
+- **`npm run dev`**: Starts the Vite development server with hot module replacement
+- **`npm run build`**: Creates an optimized production build in the `dist` folder
+- **`npm run preview`**: Previews the production build locally before deployment
+- **`npm run lint`**: Runs ESLint to check for code quality issues
+
+## Development workflow
+
+1. Make your changes in the `src` directory
+2. The development server will automatically reload
+3. Run `npm run lint` to check for linting errors
+4. Test your changes thoroughly
+5. Build the project with `npm run build` to ensure it compiles successfully
+
+<Note>
+The development server uses Vite, which provides extremely fast hot module replacement and build times.
+</Note>
+
+## Troubleshooting
+
+If you encounter issues:
+
+- **Port already in use**: Vite will automatically try the next available port if 5173 is occupied
+- **Module not found errors**: Try deleting `node_modules` and running `npm install` again
+- **Build fails**: Ensure you're using a compatible Node.js version (18 or higher)

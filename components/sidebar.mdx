@@ -1,0 +1,162 @@
+---
+title: Sidebar
+description: File list and management component
+---
+
+The `Sidebar` component provides the file management interface, displaying a list of open files and actions for uploading, creating, and removing files.
+
+## Props
+
+<ParamField path="isOpen" type="boolean" required>
+  Controls sidebar visibility. When false, the sidebar is hidden.
+</ParamField>
+
+<ParamField path="files" type="array" required>
+  Array of file objects. Each file has `id`, `name`, and `content` properties.
+</ParamField>
+
+<ParamField path="activeFileId" type="string">
+  ID of the currently selected file. Used to highlight the active file in the list.
+</ParamField>
+
+<ParamField path="onSelectFile" type="function" required>
+  Callback function called when a file is clicked. Receives the file ID as argument.
+</ParamField>
+
+<ParamField path="onNewFile" type="function" required>
+  Callback function called when the new file button is clicked.
+</ParamField>
+
+<ParamField path="onRemoveFile" type="function" required>
+  Callback function called when a file's remove button is clicked. Receives file ID and event object.
+</ParamField>
+
+<ParamField path="onFileUpload" type="function" required>
+  Callback function called when files are uploaded. Receives an array of File objects.
+</ParamField>
+
+## File upload
+
+The component uses a hidden file input for uploading markdown files:
+
+```jsx
+const fileInputRef = useRef(null);
+
+const handleClickUpload = () => {
+  fileInputRef.current?.click();
+};
+
+const handleFileChange = (e) => {
+  const fileList = Array.from(e.target.files);
+  if (fileList.length > 0) {
+    onFileUpload(fileList);
+  }
+  // Reset the input so the same file(s) can be uploaded again if needed
+  e.target.value = null;
+};
+```
+
+The input accepts markdown and text files with multiple file selection:
+
+```jsx
+<input 
+  type="file" 
+  ref={fileInputRef} 
+  onChange={handleFileChange} 
+  accept=".md,.markdown,text/markdown,text/plain" 
+  multiple
+  style={{ display: 'none' }} 
+/>
+```
+
+## File list rendering
+
+When files are present, they're rendered as clickable items:
+
+```jsx
+files.map(file => (
+  <div 
+    key={file.id} 
+    className={`file-item ${file.id === activeFileId ? 'active' : ''}`}
+    onClick={() => onSelectFile(file.id)}
+  >
+    <FileText size={16} style={{ flexShrink: 0 }} />
+    <span className="file-name" style={{ 
+      flex: 1, 
+      whiteSpace: 'nowrap', 
+      overflow: 'hidden', 
+      textOverflow: 'ellipsis' 
+    }}>
+      {file.name}
+    </span>
+    <button 
+      className="btn-icon file-remove-btn" 
+      onClick={(e) => onRemoveFile(file.id, e)}
+      title="Remove file"
+    >
+      <X size={14} />
+    </button>
+  </div>
+))
+```
+
+## Active file highlighting
+
+The active file is highlighted using conditional class application:
+
+```jsx
+className={`file-item ${file.id === activeFileId ? 'active' : ''}`}
+```
+
+The `active` class applies distinct styling to indicate the current selection.
+
+## Empty state
+
+When no files are open, the sidebar displays an empty state:
+
+```jsx
+{files.length === 0 ? (
+  <div style={{ 
+    textAlign: 'center', 
+    padding: 'var(--space-md)', 
+    color: 'var(--text-secondary)', 
+    fontSize: '0.85rem' 
+  }}>
+    <Ghost size={24} style={{ marginBottom: '8px', opacity: 0.5 }} />
+    <p>No files open</p>
+  </div>
+) : (
+  // file list rendering
+)}
+```
+
+## Header actions
+
+The sidebar header contains two action buttons:
+
+```jsx
+<div className="sidebar-header">
+  <span>Files</span>
+  <div style={{ flex: 1 }} />
+  <button className="btn-icon" onClick={handleClickUpload} title="Open Markdown File">
+    <Upload size={16} />
+  </button>
+  <button className="btn-icon" onClick={onNewFile} title="New empty file">
+    <Plus size={16} />
+  </button>
+</div>
+```
+
+## Usage example
+
+```jsx
+<Sidebar 
+  isOpen={isOpen} 
+  files={files} 
+  activeFileId={activeFileId} 
+  onSelectFile={setActiveFileId}
+  onNewFile={handleNewFile}
+  onRemoveFile={handleRemoveFile}
+  onFileUpload={loadFile}
+/>
+```

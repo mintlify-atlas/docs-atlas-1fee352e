@@ -1,0 +1,156 @@
+---
+title: Architecture
+description: Understanding MD Viewer's technical architecture and design decisions
+---
+
+MD Viewer is built with modern web technologies, focusing on performance, simplicity, and a native macOS-like experience.
+
+## Technology stack
+
+The application uses the following core technologies:
+
+- **React 19**: Latest version of React for building the user interface
+- **Vite**: Next-generation frontend build tool for fast development and optimized builds
+- **react-markdown**: Renders markdown content to React components
+- **remark-gfm**: Adds support for GitHub Flavored Markdown (tables, strikethrough, task lists)
+- **Mermaid**: Renders diagrams and flowcharts from markdown code blocks
+- **lucide-react**: Beautiful, consistent icon library
+- **ESLint**: Code quality and consistency checks
+
+## Project structure
+
+The source code is organized as follows:
+
+```
+src/
+├── components/
+│   ├── MarkdownRenderer.jsx  # Markdown rendering with syntax highlighting
+│   ├── Mermaid.jsx           # Mermaid diagram component
+│   ├── Sidebar.jsx           # File list sidebar
+│   └── Toolbar.jsx           # Top toolbar with controls
+├── assets/                   # Static assets
+├── App.jsx                   # Main application component
+├── App.css                   # Application-specific styles
+├── index.css                 # Global styles and CSS custom properties
+└── main.jsx                  # Application entry point
+```
+
+### Component breakdown
+
+- **`App.jsx`**: Main application component that orchestrates the entire UI, manages state, and handles file operations
+- **`Sidebar.jsx`**: Displays the list of open files and provides file management controls
+- **`Toolbar.jsx`**: Contains the sidebar toggle, file title, and font size controls
+- **`MarkdownRenderer.jsx`**: Renders markdown content using react-markdown with custom components
+- **`Mermaid.jsx`**: Handles Mermaid diagram rendering with proper initialization
+
+## State management
+
+MD Viewer uses React's built-in state management:
+
+- **`useState`**: For component-level state (sidebar open/closed, active file, font size, etc.)
+- **`useCallback`**: For memoized event handlers to optimize performance
+- **`useEffect`**: For side effects like loading and persisting data
+
+### Local storage persistence
+
+The application persists user data in the browser's local storage:
+
+```javascript
+// Files are saved automatically on change
+localStorage.setItem('md-viewer-files', JSON.stringify(files));
+localStorage.setItem('md-viewer-active-id', activeFileId);
+```
+
+This ensures that files and the active selection are preserved across browser sessions.
+
+## Styling approach
+
+MD Viewer uses a custom CSS approach with modern techniques:
+
+### CSS custom properties
+
+The entire color scheme and design system is defined using CSS custom properties in `src/index.css`, making it easy to customize:
+
+- Theme colors (background, surface, accent)
+- Typography scale
+- Spacing system
+- Border radius values
+
+### Glassmorphism design
+
+The UI uses glassmorphism effects to create a modern, macOS-like appearance:
+
+- Semi-transparent backgrounds with backdrop blur
+- Subtle borders and shadows
+- Smooth transitions and animations
+
+### System fonts
+
+The application uses system fonts for a native feel:
+
+- `-apple-system` for macOS
+- Fallbacks for other platforms
+- Separate font stacks for UI and markdown content
+
+## Component architecture
+
+### Unidirectional data flow
+
+Data flows from the `App` component down to child components via props:
+
+```javascript
+<Sidebar 
+  isOpen={isOpen} 
+  files={files} 
+  activeFileId={activeFileId} 
+  onSelectFile={setActiveFileId}
+  onNewFile={handleNewFile}
+  onRemoveFile={handleRemoveFile}
+  onFileUpload={loadFile}
+/>
+```
+
+### Event handlers
+
+User interactions are handled through callback props that modify state in the parent component, ensuring a single source of truth.
+
+## File handling
+
+MD Viewer supports multiple ways to open files:
+
+1. **File upload**: Click the upload button in the sidebar
+2. **Drag and drop**: Drag markdown files anywhere in the window
+3. **Create new**: Generate a new untitled document
+
+Files are read using the FileReader API:
+
+```javascript
+const reader = new FileReader();
+reader.onload = (e) => {
+  const content = e.target.result;
+  // Add to files array
+};
+reader.readAsText(fileObj);
+```
+
+## Performance optimizations
+
+- **React 19**: Benefits from automatic optimizations in the latest React version
+- **Memoized callbacks**: Uses `useCallback` for event handlers to prevent unnecessary re-renders
+- **Vite**: Extremely fast HMR during development and optimized production builds
+- **Auto-hiding toolbar**: Hides on scroll down for a distraction-free reading experience
+
+## Build configuration
+
+The Vite configuration (`vite.config.js`) is minimal and uses the official React plugin:
+
+```javascript
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
+
+export default defineConfig({
+  plugins: [react()],
+})
+```
+
+This provides fast refresh and optimal builds out of the box.

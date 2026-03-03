@@ -1,0 +1,266 @@
+---
+title: File management
+description: Upload, create, and manage multiple markdown files with drag-and-drop support and localStorage persistence
+---
+
+MD Viewer provides flexible file management with multiple upload methods, file creation, and automatic persistence across sessions.
+
+## Upload files
+
+There are two ways to upload markdown files to MD Viewer:
+
+### Upload button
+
+Click the upload icon in the sidebar header to open a file picker:
+
+```jsx src/components/Sidebar.jsx
+const handleClickUpload = () => {
+  fileInputRef.current?.click();
+};
+
+const handleFileChange = (e) => {
+  const fileList = Array.from(e.target.files);
+  if (fileList.length > 0) {
+    onFileUpload(fileList);
+  }
+  // Reset the input so the same file(s) can be uploaded again if needed
+  e.target.value = null;
+};
+```
+
+The file input accepts markdown and plain text files:
+
+```jsx src/components/Sidebar.jsx
+<input 
+  type="file" 
+  ref={fileInputRef} 
+  onChange={handleFileChange} 
+  accept=".md,.markdown,text/markdown,text/plain" 
+  multiple
+  style={{ display: 'none' }} 
+/>
+```
+
+<Info>
+The `multiple` attribute allows you to select and upload multiple files at once.
+</Info>
+
+### Drag and drop
+
+Drag markdown files from your file system directly into the viewer window:
+
+```jsx src/App.jsx
+const handleDragOver = useCallback((e) => {
+  e.preventDefault();
+  setIsDragging(true);
+}, []);
+
+const handleDrop = useCallback((e) => {
+  e.preventDefault();
+  setIsDragging(false);
+  
+  if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+    loadFile(Array.from(e.dataTransfer.files));
+  }
+}, []);
+```
+
+When dragging files over the window, a visual overlay appears:
+
+```jsx src/App.jsx
+{isDragging && (
+  <div className="drop-overlay">
+    <div className="drop-overlay-content">
+      <Upload size={48} />
+      <span>Drop Markdown file here</span>
+    </div>
+  </div>
+)}
+```
+
+## Multiple file support
+
+MD Viewer can handle multiple files simultaneously and prevents duplicates:
+
+```jsx src/App.jsx
+const loadFile = (filesToLoad) => {
+  const filesArray = Array.isArray(filesToLoad) ? filesToLoad : [filesToLoad];
+  
+  filesArray.forEach((fileObj, index) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const content = e.target.result;
+      const newFile = {
+        id: Date.now().toString() + Math.random().toString(36).substr(2, 5),
+        name: fileObj.name,
+        content: content
+      };
+      
+      setFiles(prev => {
+        const exists = prev.find(f => f.name === newFile.name);
+        if (exists) {
+          return prev.map(f => f.id === exists.id ? {...f, content: newFile.content} : f);
+        }
+        return [newFile, ...prev];
+      });
+    };
+    reader.readAsText(fileObj);
+  });
+};
+```
+
+<Note>
+When uploading a file with the same name as an existing file, MD Viewer updates the existing file's content rather than creating a duplicate.
+</Note>
+
+## Create new files
+
+Create empty markdown files directly in the viewer:
+
+```jsx src/App.jsx
+const handleNewFile = () => {
+  const newFile = {
+    id: Date.now().toString(),
+    name: `Untitled-${files.length}.md`,
+    content: '# New Document\n\nStart typing here...'
+  };
+  setFiles(prev => [newFile, ...prev]);
+  setActiveFileId(newFile.id);
+};
+```
+
+Click the plus icon in the sidebar header to create a new file. Each new file gets a unique name like `Untitled-0.md`, `Untitled-1.md`, etc.
+
+## Remove files
+
+Remove files by clicking the X button that appears when hovering over a file:
+
+```jsx src/components/Sidebar.jsx
+<button 
+  className="btn-icon file-remove-btn" 
+  onClick={(e) => onRemoveFile(file.id, e)}
+  title="Remove file"
+>
+  <X size={14} />
+</button>
+```
+
+The remove button is hidden by default and appears on hover:
+
+```css src/index.css
+.file-remove-btn {
+  opacity: 0;
+  width: 24px;
+  height: 24px;
+  position: absolute;
+  right: var(--space-sm);
+}
+
+.file-item:hover .file-remove-btn {
+  opacity: 1;
+}
+```
+
+When removing a file, the app intelligently selects the next file:
+
+```jsx src/App.jsx
+const handleRemoveFile = (idToRemove, e) => {
+  e.stopPropagation(); // Prevent selecting the file when clicking remove
+  setFiles(prev => {
+    const newFiles = prev.filter(f => f.id !== idToRemove);
+    if (activeFileId === idToRemove) {
+      setActiveFileId(newFiles.length > 0 ? newFiles[0].id : null);
+    }
+    return newFiles;
+  });
+};
+```
+
+## File persistence
+
+All files are automatically saved to `localStorage` and restored on app launch.
+
+### Saving files
+
+Files are saved whenever they change:
+
+```jsx src/App.jsx
+// Save files to local storage whenever they change
+React.useEffect(() => {
+  localStorage.setItem('md-viewer-files', JSON.stringify(files));
+  localStorage.setItem('md-viewer-active-id', activeFileId);
+}, [files, activeFileId]);
+```
+
+### Loading files
+
+On startup, MD Viewer restores your previous session:
+
+```jsx src/App.jsx
+React.useEffect(() => {
+  const savedFiles = localStorage.getItem('md-viewer-files');
+  const savedActiveId = localStorage.getItem('md-viewer-active-id');
+
+  if (savedFiles) {
+    const parsedFiles = JSON.parse(savedFiles);
+    if (parsedFiles.length > 0) {
+      setFiles(parsedFiles);
+      setActiveFileId(savedActiveId || parsedFiles[0].id);
+      return;
+    }
+  }
+
+  // Show welcome file if no saved files
+  const welcomeId = Date.now().toString();
+  const welcomeContent = `# Welcome to MD Viewer for Mac\n\n...`;
+  
+  setFiles([{
+    id: welcomeId,
+    name: 'Welcome.md',
+    content: welcomeContent
+  }]);
+  setActiveFileId(welcomeId);
+}, []);
+```
+
+<Warning>
+Files are only stored in your browser's localStorage. They are not synced across devices or backed up to a server.
+</Warning>
+
+## File list UI
+
+The sidebar displays all open files with visual indicators:
+
+```jsx src/components/Sidebar.jsx
+{files.length === 0 ? (
+  <div style={{ textAlign: 'center', padding: 'var(--space-md)', color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
+    <Ghost size={24} style={{ marginBottom: '8px', opacity: 0.5 }} />
+    <p>No files open</p>
+  </div>
+) : (
+  files.map(file => (
+    <div 
+      key={file.id} 
+      className={`file-item ${file.id === activeFileId ? 'active' : ''}`}
+      onClick={() => onSelectFile(file.id)}
+    >
+      <FileText size={16} style={{ flexShrink: 0 }} />
+      <span className="file-name" style={{ flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+        {file.name}
+      </span>
+      <button className="btn-icon file-remove-btn" onClick={(e) => onRemoveFile(file.id, e)} title="Remove file">
+        <X size={14} />
+      </button>
+    </div>
+  ))
+)}
+```
+
+Active files are highlighted with the accent color:
+
+```css src/index.css
+.file-item.active {
+  background-color: var(--accent-blue);
+  color: white;
+}
+```

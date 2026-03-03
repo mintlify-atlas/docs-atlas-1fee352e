@@ -1,0 +1,235 @@
+---
+title: Contributing
+description: Learn how to contribute to MD Viewer
+---
+
+We welcome contributions to MD Viewer! This guide will help you understand how to contribute effectively.
+
+## How to contribute
+
+There are many ways to contribute to MD Viewer:
+
+- **Report bugs**: Create an issue describing the bug and steps to reproduce
+- **Suggest features**: Open an issue with your feature idea and use case
+- **Submit pull requests**: Fix bugs, add features, or improve documentation
+- **Improve documentation**: Help make the docs clearer and more comprehensive
+
+## Development setup
+
+Before contributing, make sure you have your development environment set up. See the [Development setup](/development/setup) guide for detailed instructions.
+
+<Steps>
+  <Step title="Fork and clone">
+    Fork the repository on GitHub and clone your fork locally:
+
+    ```bash
+    git clone https://github.com/yourusername/md-viewer.git
+    cd md-viewer
+    ```
+  </Step>
+
+  <Step title="Create a branch">
+    Create a new branch for your changes:
+
+    ```bash
+    git checkout -b feature/your-feature-name
+    ```
+
+    Use descriptive branch names:
+    - `feature/` for new features
+    - `fix/` for bug fixes
+    - `docs/` for documentation changes
+  </Step>
+
+  <Step title="Make your changes">
+    Make your changes following the code style guidelines below.
+  </Step>
+
+  <Step title="Test thoroughly">
+    Test your changes in the development environment:
+
+    ```bash
+    npm run dev
+    ```
+
+    Ensure the application works as expected and no errors appear in the console.
+  </Step>
+
+  <Step title="Run linting">
+    Check your code for linting errors:
+
+    ```bash
+    npm run lint
+    ```
+
+    Fix any issues before committing.
+  </Step>
+</Steps>
+
+## Code style
+
+MD Viewer uses ESLint to maintain consistent code quality.
+
+### ESLint configuration
+
+The project uses a modern ESLint flat config with the following rules:
+
+- **JavaScript recommended rules**: `@eslint/js` recommended config
+- **React Hooks rules**: Enforces rules of hooks
+- **React Refresh**: Ensures components can be hot-reloaded
+- **Custom rules**:
+  - Unused variables are errors, except for uppercase names (constants)
+
+### Code conventions
+
+- Use **functional components** with hooks
+- Use **arrow functions** for component definitions
+- Use **const** for immutable values, **let** for mutable values
+- Use **destructuring** when accessing props and state
+- Keep components **focused and single-purpose**
+- Add **comments** for complex logic
+
+<CodeGroup>
+```jsx Good example
+export default function MyComponent({ title, onClose }) {
+  const [isOpen, setIsOpen] = useState(false);
+  
+  const handleClick = useCallback(() => {
+    setIsOpen(true);
+  }, []);
+  
+  return (
+    <div>{title}</div>
+  );
+}
+```
+
+```jsx Avoid
+function MyComponent(props) {
+  var isOpen = false;
+  
+  function handleClick() {
+    isOpen = true;
+  }
+  
+  return (
+    <div>{props.title}</div>
+  );
+}
+
+export default MyComponent;
+```
+</CodeGroup>
+
+## Component guidelines
+
+When creating or modifying components:
+
+### File organization
+
+- Place new components in `src/components/`
+- Use `.jsx` extension for files containing JSX
+- Name files using PascalCase matching the component name
+
+### Component structure
+
+```jsx
+import React, { useState, useCallback } from 'react';
+import { IconName } from 'lucide-react';
+
+export default function ComponentName({ prop1, prop2, onAction }) {
+  // State declarations
+  const [state, setState] = useState(initialValue);
+  
+  // Event handlers
+  const handleEvent = useCallback(() => {
+    // Handler logic
+  }, [dependencies]);
+  
+  // Render
+  return (
+    <div className="component-name">
+      {/* Component JSX */}
+    </div>
+  );
+}
+```
+
+### Styling guidelines
+
+- Use semantic class names
+- Define component-specific styles in the component's CSS file
+- Use CSS custom properties for colors and spacing
+- Maintain the glassmorphism aesthetic
+
+## Pull request process
+
+<Steps>
+  <Step title="Commit your changes">
+    Write clear, descriptive commit messages:
+
+    ```bash
+    git add .
+    git commit -m "Add feature: description of what you added"
+    ```
+
+    Good commit message examples:
+    - `Fix: Sidebar not closing on mobile`
+    - `Add: Export to PDF functionality`
+    - `Update: Improve markdown table rendering`
+  </Step>
+
+  <Step title="Push to your fork">
+    Push your changes to your GitHub fork:
+
+    ```bash
+    git push origin feature/your-feature-name
+    ```
+  </Step>
+
+  <Step title="Create pull request">
+    Go to the original repository on GitHub and create a pull request:
+
+    - Provide a clear title describing the change
+    - Describe what changes you made and why
+    - Reference any related issues
+    - Include screenshots for UI changes
+  </Step>
+
+  <Step title="Address feedback">
+    Respond to any code review feedback and make requested changes.
+  </Step>
+</Steps>
+
+## Testing
+
+Currently, MD Viewer does not have an automated test suite. When contributing:
+
+- Manually test all affected functionality
+- Test in different browsers (Chrome, Firefox, Safari)
+- Verify drag-and-drop file upload works
+- Check that markdown rendering is correct
+- Ensure local storage persistence works
+
+<Note>
+We welcome contributions to add automated testing to the project!
+</Note>
+
+## What to work on
+
+Look for issues labeled:
+
+- `good first issue`: Great for newcomers
+- `help wanted`: We need community help
+- `bug`: Bug fixes are always welcome
+- `enhancement`: New features and improvements
+
+## Questions?
+
+If you have questions about contributing:
+
+- Open an issue with your question
+- Check existing issues for similar questions
+- Review the [Architecture](/development/architecture) guide for technical details
+
+Thank you for contributing to MD Viewer!

@@ -1,0 +1,292 @@
+---
+title: Customization
+description: Personalize your reading experience with font size controls, automatic dark mode, and sidebar toggling
+---
+
+MD Viewer offers several customization options to tailor your markdown reading experience, from font size adjustments to automatic theme switching.
+
+## Font size controls
+
+Adjust the markdown rendering size using the toolbar controls, with a range from 50% to 200% of the base size.
+
+### Toolbar controls
+
+The toolbar provides increase and decrease buttons with visual feedback:
+
+```jsx src/components/Toolbar.jsx
+const handleIncreaseFont = () => {
+  setFontSizeFactor(prev => Math.min(prev + 0.1, 2.0));
+};
+
+const handleDecreaseFont = () => {
+  setFontSizeFactor(prev => Math.max(prev - 0.1, 0.5));
+};
+```
+
+The controls show the current percentage and disable at min/max values:
+
+```jsx src/components/Toolbar.jsx
+<div className="toolbar-group">
+  <button 
+    className="btn-icon" 
+    onClick={handleDecreaseFont} 
+    title="Decrease Font Size" 
+    disabled={fontSizeFactor <= 0.5}
+  >
+    <span style={{ fontSize: '13px', fontWeight: 600 }}>T</span>
+  </button>
+  <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', width: '40px', textAlign: 'center' }}>
+    {Math.round(fontSizeFactor * 100)}%
+  </span>
+  <button 
+    className="btn-icon" 
+    onClick={handleIncreaseFont} 
+    title="Increase Font Size" 
+    disabled={fontSizeFactor >= 2.0}
+  >
+    <span style={{ fontSize: '17px', fontWeight: 600 }}>T</span>
+  </button>
+</div>
+```
+
+<Info>
+Font size changes in 10% increments and are reflected immediately in the markdown content.
+</Info>
+
+### Implementation
+
+Font scaling uses CSS custom properties for smooth transitions:
+
+```jsx src/components/MarkdownRenderer.jsx
+// Update CSS variable for markdown scale
+React.useEffect(() => {
+  document.documentElement.style.setProperty('--md-scale', fontSizeFactor);
+}, [fontSizeFactor]);
+```
+
+The CSS applies the scale factor:
+
+```css src/index.css
+:root {
+  --md-base-size: 16px;
+  --md-scale: 1;
+}
+
+.markdown-body {
+  font-size: calc(var(--md-base-size) * var(--md-scale));
+  transition: font-size 0.2s ease;
+}
+```
+
+## Dark and light mode
+
+MD Viewer automatically switches between light and dark themes based on your system preferences.
+
+### CSS media queries
+
+Theme switching uses the `prefers-color-scheme` media query:
+
+```css src/index.css
+:root {
+  --bg-app: #f9f9fa;
+  --bg-paper: #ffffff;
+  --text-primary: #1d1d1f;
+  --text-secondary: #86868b;
+  --accent-blue: #0066cc;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg-app: #1e1e1e;
+    --bg-paper: #252526;
+    --text-primary: #f5f5f7;
+    --text-secondary: #a1a1a6;
+    --accent-blue: #2997ff;
+  }
+}
+```
+
+### Component-specific dark mode
+
+Some elements have specific dark mode overrides:
+
+<CodeGroup>
+
+```css Code blocks
+.markdown-body pre {
+  background-color: rgba(0, 0, 0, 0.03);
+}
+
+@media (prefers-color-scheme: dark) {
+  .markdown-body pre {
+    background-color: rgba(255, 255, 255, 0.05);
+  }
+}
+```
+
+```css Buttons
+.btn-icon:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+@media (prefers-color-scheme: dark) {
+  .btn-icon:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+  }
+}
+```
+
+```css Tables
+.markdown-body table tr:nth-child(2n) {
+  background-color: rgba(0, 0, 0, 0.02);
+}
+
+@media (prefers-color-scheme: dark) {
+  .markdown-body table tr:nth-child(2n) {
+    background-color: rgba(255, 255, 255, 0.02);
+  }
+}
+```
+
+</CodeGroup>
+
+### Mermaid theme
+
+Mermaid diagrams are initialized with a dark theme:
+
+```jsx src/components/Mermaid.jsx
+mermaid.initialize({
+  startOnLoad: false,
+  theme: 'dark',
+  securityLevel: 'loose',
+});
+```
+
+<Note>
+Mermaid diagrams currently use a dark theme regardless of system preference. This could be enhanced to match the system theme.
+</Note>
+
+## Sidebar toggle
+
+Toggle the sidebar visibility to maximize reading space.
+
+### Toggle button
+
+The toolbar includes a sidebar toggle button:
+
+```jsx src/components/Toolbar.jsx
+<button className="btn-icon" onClick={toggleSidebar} title="Toggle Sidebar">
+  <PanelLeft size={18} />
+</button>
+```
+
+### Animation
+
+The sidebar slides out smoothly using CSS transforms:
+
+```css src/index.css
+.sidebar {
+  width: var(--sidebar-width);
+  transition: transform 0.3s ease;
+}
+
+.sidebar.hidden {
+  transform: translateX(-100%);
+  margin-right: calc(-1 * var(--sidebar-width));
+}
+```
+
+The negative margin ensures the main content area expands to fill the space:
+
+```jsx src/App.jsx
+const toggleSidebar = () => setIsOpen(!isOpen);
+```
+
+## Toolbar auto-hide
+
+The toolbar automatically hides when scrolling down and reappears when scrolling up.
+
+### Scroll detection
+
+```jsx src/App.jsx
+const [isToolbarHidden, setIsToolbarHidden] = useState(false);
+const lastScrollY = React.useRef(0);
+
+const handleScroll = useCallback((e) => {
+  const currentScrollY = e.target.scrollTop;
+  
+  if (currentScrollY > lastScrollY.current && currentScrollY > 60) {
+    setIsToolbarHidden(true);
+  } else if (currentScrollY < lastScrollY.current) {
+    setIsToolbarHidden(false);
+  }
+  
+  lastScrollY.current = currentScrollY;
+}, []);
+```
+
+The toolbar only hides after scrolling past 60 pixels, preventing it from hiding on small movements.
+
+### Animation
+
+```css src/index.css
+.toolbar {
+  transition: transform 0.3s ease;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+}
+
+.toolbar.hidden {
+  transform: translateY(-100%);
+}
+```
+
+<Info>
+The toolbar slides up smoothly when hidden and slides back down when you scroll up.
+</Info>
+
+## Color system
+
+MD Viewer uses CSS custom properties for a consistent, customizable color system:
+
+```css src/index.css
+:root {
+  /* Colors */
+  --bg-app: #f9f9fa;
+  --bg-paper: #ffffff;
+  --bg-sidebar: #f9f9fa;
+  --bg-toolbar: transparent;
+  --border-color: rgba(0, 0, 0, 0.08);
+  --text-primary: #1d1d1f;
+  --text-secondary: #86868b;
+  --accent-blue: #0066cc;
+  --accent-blue-hover: #0071e3;
+  --selection-bg: #b3d4ff;
+}
+```
+
+All colors are defined as CSS variables, making it easy to create custom themes by overriding these values.
+
+## Typography system
+
+The typography system uses spacing variables for consistency:
+
+```css src/index.css
+:root {
+  /* Spacing */
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 32px;
+
+  /* Radii */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+}
+```
+
+These variables ensure consistent spacing and border radii throughout the application.
